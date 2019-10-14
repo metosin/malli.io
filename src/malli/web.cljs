@@ -1,0 +1,192 @@
+(ns ^:figwheel-hooks malli.web
+  (:require
+    [cljsjs.codemirror]
+    [cljsjs.codemirror.addon.edit.matchbrackets]
+    [cljsjs.codemirror.addon.lint.lint]
+    [cljsjs.codemirror.mode.clojure]
+    [cljsjs.parinfer]
+    [cljsjs.parinfer-codemirror]
+    [clojure.string :as str]
+    [reagent.core :as r]
+    [edamame.core :as e]
+    [malli.core :as m]
+    [malli.error :as me]
+    [malli.provider :as mp]
+    [malli.generator :as mg]
+    [malli.json-schema :as mj]
+    [malli.swagger :as ms])
+  (:import [goog Uri]))
+
+(defn read [x]
+  (try (e/parse-string x) (catch js/Error _)))
+
+(defn pretty [x]
+  (try (str/trim (with-out-str (cljs.pprint/pprint x))) (catch js/Error _ "")))
+
+(defn inferred [value]
+  (if (and value (not (str/blank? value)))
+    (try (pretty (mp/provide [(read value)])) (catch js/Error _))
+    ""))
+
+(defn query [k f]
+  (if-let [p (.getParameterValue (.parse Uri js/location) k)]
+    (if-not (str/blank? p)
+      (try
+        (pretty (f (read (str/trim p))))
+        (catch js/Error _ ""))
+      "")))
+
+(def models
+  {:address {:schema [:map
+                      [:id string?]
+                      [:tags [:set keyword?]]
+                      [:address
+                       [:map
+                        [:street string?]
+                        [:city string?]
+                        [:zip int?]
+                        [:lonlat [:tuple double? double?]]]]]
+             :value {:id "Lillan"
+                     :tags #{:artesan :coffee :hotel}
+                     :address {:street "Ahlmanintie 29"
+                               :city "Tampere"
+                               :zip 33100
+                               :lonlat [61.4858322, 23.7854658]}}}})
+
+(defonce schema* (r/atom {:value (or (query "schema" m/form) (pretty (m/form (-> models :address :schema))))}))
+(defonce value* (r/atom {:value (or (query "value" identity) (pretty (-> models :address :value)))}))
+(defonce inferred* (r/atom {:value (inferred (:value @value*))}))
+
+(defn reset-value! [value]
+  (let [value (swap! value* assoc :value value)]
+    (.replaceState js/window.history nil "" (str (.setParameterValue (.parse Uri js/location) "value" (:value value))))
+    (.setValue (:editor value) (:value value))))
+
+(defn reset-schema! [value]
+  (let [value (swap! schema* assoc :value value)]
+    (.replaceState js/window.history nil "" (str (.setParameterValue (.parse Uri js/location) "schema" (:value value))))
+    (.setValue (:editor value) (:value value))))
+
+(defn reset-inferred! []
+  (let [value (swap! inferred* assoc :value (inferred (:value @value*)))]
+    (.setValue (:editor value) (:value value))))
+
+(defn editor [id state* {:keys [read-only on-change]}]
+  (r/create-class
+    {:render (fn [] [:textarea
+                     {:type "text"
+                      :id id
+                      :default-value (:value @state*)
+                      :auto-complete "off"}])
+     :component-did-mount (fn [this]
+                            (let [opts (if read-only
+                                         #js {:mode "clojure"
+                                              :matchBrackets true
+                                              :readOnly true
+                                              :lineNumbers true}
+                                         #js {:mode "clojure"
+                                              :matchBrackets true
+                                              :lineNumbers true})
+                                  cm (.fromTextArea js/CodeMirror (r/dom-node this) opts)]
+                              (js/parinferCodeMirror.init cm)
+                              (.removeKeyMap cm)
+                              (when-not read-only
+                                (.on cm "change" #(let [value (.getValue %)]
+                                                    (swap! state* assoc :value value)
+                                                    (when on-change (on-change value))))
+                                (.setOption cm "extraKeys" #js {:Shift-Tab false
+                                                                :Tab false}))
+                              (swap! state* assoc :editor cm)))
+     :component-will-unmount (fn []
+                               (let [cm (:editor @state*)]
+                                 (.toTextArea cm)))}))
+
+
+(defn controls []
+  [:div.buttons
+   [:button.btn.btn-sm.btn-outline-primary
+    {:on-click #(do (reset-schema! (pretty (m/form (-> models :address :schema))))
+                    (reset-value! (pretty (-> models :address :value)))
+                    (reset-inferred!))}
+    "default"]
+   [:button.btn.btn-sm.btn-outline-primary
+    {:on-click #(do (reset-schema! "")
+                    (reset-value! "")
+                    (reset-inferred!))}
+    "empty"]
+   [:button.btn.btn-sm.btn-outline-primary
+    {:on-click #(do (reset-schema! (:value @schema*))
+                    (reset-value! (:value @value*)))}
+    "save to query!"]])
+
+
+(defn error [error]
+  [:div.alert.alert-danger
+   (update error :schema m/form)])
+
+(defn valid [schema value]
+  (try
+    (let [valid? (m/validate schema value)]
+      [:pre {:class (if valid? "alert alert-success" "alert alert-danger")}
+       (str valid?)])
+    (catch js/Error _ [:div.alert.alert-warning "???"])))
+
+(defn errors [schema value]
+  (try
+    [:div
+     (or (seq (for [[i error] (map-indexed vector (:errors (m/explain schema value)))
+                    :let [error' (me/with-error-message error)]]
+                [:div.alert.alert-danger
+                 {:key i}
+                 [:b (:message error') ": "]
+                 [:span (-> error' (update :schema m/form) (dissoc :message) (cond-> (not (:type error')) (dissoc :type)) pr-str)]]))
+         [:div.alert.alert-success "nil"])]
+    (catch js/Error _ [:div.alert.alert-warning "???"])))
+
+(defn code [id value]
+  [:div
+   (try
+     [editor id (r/atom {:value value}) {:read-only true}]
+     (catch js/Error _))])
+
+(defn app []
+  (let [schema (try (m/deserialize (:value @schema*)) (catch js/Error _))
+        inferred (try (m/deserialize (:value @inferred*)) (catch js/Error _))
+        value (try (e/parse-string (:value @value*)) (catch js/Error _))]
+
+    [:div#malli.container
+     [:div.row
+      [:p.col-12.lead
+       [:span [:a {:href "https://github.com/metosin/malli"
+                   :target "_blank"}
+               "malli"]
+        " playground"]]]
+     [:div
+      [controls]
+      [:h3 "Schema"]
+      [editor "schema" schema*]
+      [:h3 "Value"]
+      [editor "value" value* {:on-change #(reset-inferred!)}]
+      [:h3 "Valid"]
+      [valid schema value]
+      [:h3 "Errors"]
+      [errors schema value]
+      [:h3 "Sample values (schema)"]
+      [code "samples" (str/join "\n\n" (try (mg/sample schema) (catch js/Error _ "")))]
+      [:h3 "JSON Schema"]
+      [code "json-schema" (try (pretty (mj/transform schema)) (catch js/Error _ ""))]
+      [:h3 "Swagger2 Schema"]
+      [code "swagger2-schema" (try (pretty (ms/transform schema)) (catch js/Error _ ""))]
+      [:h3 "Inferred Schema"]
+      [editor "inferred" inferred* {:read-only true}]
+      [:h3 "Sample inferred values"]
+      [code "samples-inferred" (try (str/join "\n\n" (mg/sample inferred)) (catch js/Error _ ""))]]]))
+
+(defn mount-app-element []
+  (when-let [el (js/document.getElementById "app")]
+    (r/render-component [app] el)))
+
+(mount-app-element)
+
+(defn ^:after-load on-reload []
+  (mount-app-element))
