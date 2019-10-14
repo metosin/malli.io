@@ -7,6 +7,7 @@
     [cljsjs.parinfer]
     [cljsjs.parinfer-codemirror]
     [clojure.string :as str]
+    [cljs.pprint :as pprint]
     [reagent.core :as r]
     [edamame.core :as e]
     [malli.core :as m]
@@ -21,7 +22,7 @@
   (try (e/parse-string x) (catch js/Error _)))
 
 (defn pretty [x]
-  (try (str/trim (with-out-str (cljs.pprint/pprint x))) (catch js/Error _ "")))
+  (try (str/trim (with-out-str (pprint/pprint x))) (catch js/Error _ "")))
 
 (defn inferred [value]
   (if (and value (not (str/blank? value)))
