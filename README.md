@@ -1,7 +1,7 @@
 # malli.web
 
 An online playground for [malli](https://github.com/metosin/malli)
-hosted **here**.
+hosted at https://metosin.github.io/malli.web/.
 
 ## Development
 
