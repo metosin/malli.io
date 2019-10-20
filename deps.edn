@@ -4,7 +4,7 @@
         cljsjs/codemirror {:mvn/version "5.44.0-1"}
         cljsjs/parinfer-codemirror {:mvn/version "1.4.1-2"}
         metosin/malli {:git/url "https://github.com/metosin/malli"
-                       :sha "4629cfed3daae837f0088b37839c853afd3705b9"}
+                       :sha "0eab0906c96f877d777363e204b4bd5e3ae54ba0"}
         appliedscience/js-interop {:mvn/version "0.1.20"}}
  :paths ["src" "resources"]
  :aliases {:fig {:extra-deps
