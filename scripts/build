@@ -1,0 +1,25 @@
+#!/bin/bash
+
+## https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
+set -Eeo pipefail
+
+commit=$(git rev-parse --short=16 HEAD)
+
+echo "Building the App"
+
+rm -rf out
+clojure -Abuild
+
+echo "Copying Assets to docs"
+
+rm -rf docs
+mkdir docs
+
+cp out/main.js "docs/main-$commit.js"
+cp resources/public/css/style.css "docs/style-$commit.css"
+cp resources/public/docs.html docs/index.html
+
+sed -i.bak "s/\$COMMIT/$commit/g" docs/index.html
+rm "docs/index.html.bak"
+
+echo "Done"
