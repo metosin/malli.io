@@ -86,8 +86,8 @@
                   '(fn [{:keys [x y]}] (> x y))]]
         :value {:x 1, :y 2}}})
 
-(defonce state* (r/atom {:schema (or (query "schema" m/form) (pretty (m/form (-> models :address :schema))))
-                         :value (or (query "value" identity) (pretty (-> models :address :value)))}))
+(defonce state* (r/atom {:schema (or (query "schema" m/form) "")
+                         :value (or (query "value" identity) "")}))
 (defonce delayed-state* (r/atom nil))
 (defonce mirrors* (r/atom {}))
 
