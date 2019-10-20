@@ -3,8 +3,6 @@
 An online playground for [malli](https://github.com/metosin/malli)
 hosted at https://metosin.github.io/malli.web/.
 
-**STATUS**: *Pre-alpha*, in design and prototyping phase.
-
 ## Development
 
 To get an interactive development environment run:
@@ -22,6 +20,10 @@ and you should see an alert in the browser window.
 To clean all compiled files:
 
     rm -rf target/public out
+    
+To build the docs
+
+    scriptps/build
 
 ## License
 
