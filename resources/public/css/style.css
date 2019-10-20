@@ -37,3 +37,14 @@ body {
   margin: 8px 0 8px 0;
   height: auto;
 }
+
+.overlay {
+  background-size: cover;
+  content: "";
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  opacity: 0.4;
+}
