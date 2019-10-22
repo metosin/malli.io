@@ -13,6 +13,7 @@
     [edamame.core :as e]
     [malli.core :as m]
     [malli.error :as me]
+    [malli.edn :as edn]
     [malli.provider :as mp]
     [malli.generator :as mg]
     [malli.json-schema :as mj]
@@ -23,7 +24,7 @@
   (try (e/parse-string x) (catch js/Error _)))
 
 (defn read-schema [x]
-  (try (m/deserialize x) (catch js/Error _)))
+  (try (edn/read-string x) (catch js/Error _)))
 
 (defn read-value [x]
   (try
@@ -199,7 +200,7 @@
        (catch js/Error _)))
 
 (defn swagger-schema [schema]
-  (let [schema (try (m/deserialize schema) (catch js/Error _))]
+  (let [schema (try (edn/read-string schema) (catch js/Error _))]
     [:<>
      [:h3 "Swagger2 Schema"]
      [code "swagger2-schema" (try (pretty (ms/transform schema)) (catch js/Error _ ""))]]))
