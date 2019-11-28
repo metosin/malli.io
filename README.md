@@ -23,7 +23,7 @@ To clean all compiled files:
     
 To build the docs
 
-    scriptps/build
+    ./scripts/build
 
 ## License
 
