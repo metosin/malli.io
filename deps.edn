@@ -1,12 +1,12 @@
 {:deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        org.clojure/clojurescript {:mvn/version "1.10.520"}
+        org.clojure/clojurescript {:mvn/version "1.10.597"}
         reagent {:mvn/version "0.8.1"}
         cljsjs/codemirror {:mvn/version "5.44.0-1"}
         cljsjs/parinfer-codemirror {:mvn/version "1.4.1-2"}
         fipp {:mvn/version "0.6.21"}
         metosin/malli {:git/url "https://github.com/metosin/malli"
-                       :sha "afb915a83068008079be708c070cb37eda005ea6"}
-        appliedscience/js-interop {:mvn/version "0.1.20"}}
+                       :sha "31259f3902a6296cd6ab2e3a363f753d071181f6"}
+        appliedscience/js-interop {:mvn/version "0.1.21"}}
  :paths ["src" "resources"]
  :aliases {:fig {:extra-deps
                  {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}

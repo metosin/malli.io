@@ -67,6 +67,12 @@
                                :city "Tampere"
                                :zip 33100
                                :lonlat [61.4858322, 23.7854658]}}}
+   :multi {:schema [:vector
+                    [:multi {:dispatch :type}
+                     [:sized [:map [:type [:= :sized]] [:size int?]]]
+                     [:human [:map [:type [:= :human]] [:name string?] [:address [:map [:street string?]]]]]]]
+           :value [{:type :sized, :size 10}
+                   {:type :human, :name "tiina", :address {:street "kikka"}}]}
    :user {:schema [:map
                    {:title "User"}
                    [:name string?]
@@ -169,8 +175,10 @@
       "User"]
      [:button.btn.btn-sm.btn-outline-primary
       {:on-click (reset! :address)}
-      "Address"]]))
-
+      "Address"]
+     [:button.btn.btn-sm.btn-outline-primary
+      {:on-click (reset! :multi)}
+      "Multi"]]))
 
 (defn error [error]
   [:div.alert.alert-danger
