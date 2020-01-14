@@ -3,9 +3,9 @@
         reagent {:mvn/version "0.8.1"}
         cljsjs/codemirror {:mvn/version "5.44.0-1"}
         cljsjs/parinfer-codemirror {:mvn/version "1.4.1-2"}
-        fipp {:mvn/version "0.6.21"}
+        fipp {:mvn/version "0.6.22"}
         metosin/malli {:git/url "https://github.com/metosin/malli"
-                       :sha "31259f3902a6296cd6ab2e3a363f753d071181f6"}
+                       :sha "1a1038d2473c6de784252b6ad42a6cc1e764ebcc"}
         appliedscience/js-interop {:mvn/version "0.1.21"}}
  :paths ["src" "resources"]
  :aliases {:fig {:extra-deps
