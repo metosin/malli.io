@@ -247,11 +247,12 @@
     (catch js/Error _ [:div.alert.alert-warning "???"])))
 
 (defn humanized-errors [schema value]
-  (if-let [errors (some-> (m/explain schema value)
-                          (me/with-spell-checking)
-                          (me/humanize)
-                          (pretty)
-                          (str/trim))]
+  (if-let [errors (try (some-> (m/explain schema value)
+                               (me/with-spell-checking)
+                               (me/humanize)
+                               (pretty)
+                               (str/trim))
+                       (catch js/Error _ nil))]
     [:div.alert.alert-danger [:pre errors]]
     [:div.alert.alert-success "nil"]))
 
