@@ -220,7 +220,8 @@
       "ConsCell"]
      [:button.btn.btn-sm.btn-outline-primary
       {:on-click (reset! :order)}
-      "Order"]]))
+      "Order"]
+     (if (not= @state* @delayed-state*) [:span.text-muted.small " inferring schemas and generating values.."])]))
 
 (defn error [error]
   [:div.alert.alert-danger
