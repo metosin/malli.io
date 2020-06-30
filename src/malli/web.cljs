@@ -246,6 +246,15 @@
          [:div.alert.alert-success "nil"])]
     (catch js/Error _ [:div.alert.alert-warning "???"])))
 
+(defn humanized-errors [schema value]
+  (if-let [errors (some-> (m/explain schema value)
+                          (me/with-spell-checking)
+                          (me/humanize)
+                          (pretty)
+                          (str/trim))]
+    [:div.alert.alert-danger [:pre errors]]
+    [:div.alert.alert-success "nil"]))
+
 (defn code [id]
   (try [editor id nil {:value ""}]
        (catch js/Error _)))
@@ -276,6 +285,7 @@
       [:h3 "Valid"]
       [valid schema value]
       [:h3 "Errors"]
+      [humanized-errors schema value]
       [errors schema value]
       [:div
        {:class (if (not= @state* @delayed-state*) "overlay")}
