@@ -10,6 +10,7 @@
     [fipp.clojure :as fipp]
     [goog.functions :as functions]
     [reagent.core :as r]
+    [reagent.dom :as rd]
     [edamame.core :as e]
     [malli.core :as m]
     [malli.error :as me]
@@ -73,6 +74,41 @@
                      [:human [:map [:type [:= :human]] [:name string?] [:address [:map [:street string?]]]]]]]
            :value [{:type :sized, :size 10}
                    {:type :human, :name "tiina", :address {:street "kikka"}}]}
+   :cons {:schema [:schema {:title "ConsCell"
+                            :registry {:user/cons [:maybe [:tuple int? [:ref :user/cons]]]}}
+                   :user/cons]
+          :value [1 [2 [3 [4 nil]]]]}
+   :order {:schema [:schema
+                    {:registry {:user/country [:map {:closed true}
+                                               [:name [:enum :FI :PO]]
+                                               [:neighbors {:optional true} [:vector [:ref :user/country]]]]
+                                :user/burger [:map
+                                              [:name string?]
+                                              [:description {:optional true} string?]
+                                              [:origin [:maybe :user/country]]
+                                              [:price pos-int?]]
+                                :user/order-line [:map {:closed true}
+                                                  [:burger :user/burger]
+                                                  [:amount int?]]
+                                :user/order [:map {:closed true}
+                                             [:lines [:vector :user/order-line]]
+                                             [:delivery [:map {:closed true}
+                                                         [:delivered boolean?]
+                                                         [:address [:map
+                                                                    [:street string?]
+                                                                    [:zip int?]
+                                                                    [:country :user/country]]]]]]}}
+                    :user/order]
+           :value {:lines [{:burger {:name "NAUGHTY"
+                                     :description "Finnish 100% beef patty, cheddar, St Agur blue cheese, bacon jam, rocket, aioli"
+                                     :origin {:name :FI}
+                                     :price 11}
+                            :amount 2}]
+                   :delivery {:delivered false
+                              :address {:street "Hämeenkatu 10"
+                                        :zip 33100
+                                        :country {:name :FI
+                                                  :neighbors [{:name :PO}]}}}}}
    :user {:schema [:map
                    {:title "User"}
                    [:name string?]
@@ -110,7 +146,7 @@
                        (.setValue (@mirrors* "swagger-schema") (try (pretty (ms/transform schema)) (catch js/Error _ "")))
                        (.setValue (@mirrors* "inferred") (pretty inferred))
                        (.setValue (@mirrors* "samples-inferred") (try (str/join "\n\n" (map pretty (mg/sample inferred))) (catch js/Error _ "")))
-                       (reset! delayed-state* state))) 500))
+                       (reset! delayed-state* state))) 1000))
 
 (defn sync-delayed-state! []
   (when (not= @delayed-state* @state*)
@@ -142,7 +178,7 @@
                                          #js {:mode "clojure"
                                               :matchBrackets true
                                               :lineNumbers true})
-                                  cm (.fromTextArea js/CodeMirror (r/dom-node this) opts)]
+                                  cm (.fromTextArea js/CodeMirror (rd/dom-node this) opts)]
                               (js/parinferCodeMirror.init cm)
                               (.removeKeyMap cm)
                               (when-not value
@@ -178,7 +214,13 @@
       "Address"]
      [:button.btn.btn-sm.btn-outline-primary
       {:on-click (reset! :multi)}
-      "Multi"]]))
+      "Multi"]
+     [:button.btn.btn-sm.btn-outline-primary
+      {:on-click (reset! :cons)}
+      "ConsCell"]
+     [:button.btn.btn-sm.btn-outline-primary
+      {:on-click (reset! :order)}
+      "Order"]]))
 
 (defn error [error]
   [:div.alert.alert-danger
@@ -249,7 +291,7 @@
 
 (defn mount-app-element []
   (when-let [el (js/document.getElementById "app")]
-    (r/render-component [app] el)))
+    (rd/render [app] el)))
 
 (mount-app-element)
 

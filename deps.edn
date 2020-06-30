@@ -1,18 +1,20 @@
 {:deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        org.clojure/clojurescript {:mvn/version "1.10.597"}
-        reagent {:mvn/version "0.8.1"}
+        org.clojure/clojurescript {:mvn/version "1.10.773"}
+        reagent {:mvn/version "0.10.0"}
         cljsjs/codemirror {:mvn/version "5.44.0-1"}
         cljsjs/parinfer-codemirror {:mvn/version "1.4.1-2"}
-        fipp {:mvn/version "0.6.22"}
+        fipp {:mvn/version "0.6.23"}
         metosin/malli {:git/url "https://github.com/metosin/malli"
-                       :sha "1a1038d2473c6de784252b6ad42a6cc1e764ebcc"}
-        appliedscience/js-interop {:mvn/version "0.1.21"}}
+                       :sha "2c978df4c860a40280f71650d3399078223fefac"}
+        appliedscience/js-interop {:mvn/version "0.2.5"}}
  :paths ["src" "resources"]
  :aliases {:fig {:extra-deps
                  {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
-                  com.bhauman/figwheel-main {:mvn/version "0.2.3"}}
+                  com.bhauman/figwheel-main {:mvn/version "0.2.9"}}
                  :extra-paths ["src" "target" "test"]}
            :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]}
+           :outdated {:extra-deps {olical/depot {:mvn/version "RELEASE"}}
+                      :main-opts ["-m" "depot.outdated.main" "-a" "outdated"]}
            :build {:main-opts ["-m" "cljs.main" "-O" "advanced"
                                "-co" "prod.cljs.edn"
                                "-d" "out" "-c" "malli.web"]}}}

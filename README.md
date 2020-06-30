@@ -27,6 +27,6 @@ To build the docs
 
 ## License
 
-Copyright © 2019 Metosin
+Copyright © 2019-2020 Metosin
 
 Distributed under the EPL License, same as Clojure. See LICENSE.
