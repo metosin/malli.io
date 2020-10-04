@@ -73,26 +73,26 @@
                    :user/cons]
           :value [1 [2 [3 [4 nil]]]]}
    :order {:schema [:schema
-                    {:registry {:user/country [:map {:closed true}
-                                               [:name [:enum :FI :PO]]
-                                               [:neighbors {:optional true} [:vector [:ref :user/country]]]]
-                                :user/burger [:map
-                                              [:name string?]
-                                              [:description {:optional true} string?]
-                                              [:origin [:maybe :user/country]]
-                                              [:price pos-int?]]
-                                :user/order-line [:map {:closed true}
-                                                  [:burger :user/burger]
-                                                  [:amount int?]]
-                                :user/order [:map {:closed true}
-                                             [:lines [:vector :user/order-line]]
-                                             [:delivery [:map {:closed true}
-                                                         [:delivered boolean?]
-                                                         [:address [:map
-                                                                    [:street string?]
-                                                                    [:zip int?]
-                                                                    [:country :user/country]]]]]]}}
-                    :user/order]
+                    {:registry {"Country" [:map {:closed true}
+                                           [:name [:enum :FI :PO]]
+                                           [:neighbors {:optional true} [:vector [:ref "Country"]]]]
+                                "Burgr" [:map
+                                         [:name string?]
+                                         [:description {:optional true} string?]
+                                         [:origin [:maybe "Country"]]
+                                         [:price pos-int?]]
+                                "OrderLine" [:map {:closed true}
+                                             [:burger "Burger"]
+                                             [:amount int?]]
+                                "Order" [:map {:closed true}
+                                         [:lines [:vector "OrderLine"]]
+                                         [:delivery [:map {:closed true}
+                                                     [:delivered boolean?]
+                                                     [:address [:map
+                                                                [:street string?]
+                                                                [:zip int?]
+                                                                [:country "Country"]]]]]]}}
+                    "Order"]
            :value {:lines [{:burger {:name "NAUGHTY"
                                      :description "Finnish 100% beef patty, cheddar, St Agur blue cheese, bacon jam, rocket, aioli"
                                      :origin {:name :FI}
