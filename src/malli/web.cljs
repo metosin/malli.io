@@ -76,11 +76,11 @@
                     {:registry {"Country" [:map {:closed true}
                                            [:name [:enum :FI :PO]]
                                            [:neighbors {:optional true} [:vector [:ref "Country"]]]]
-                                "Burgr" [:map
-                                         [:name string?]
-                                         [:description {:optional true} string?]
-                                         [:origin [:maybe "Country"]]
-                                         [:price pos-int?]]
+                                "Burger" [:map
+                                          [:name string?]
+                                          [:description {:optional true} string?]
+                                          [:origin [:maybe "Country"]]
+                                          [:price pos-int?]]
                                 "OrderLine" [:map {:closed true}
                                              [:burger "Burger"]
                                              [:amount int?]]
