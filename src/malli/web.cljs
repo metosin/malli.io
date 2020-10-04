@@ -33,21 +33,15 @@
       (if-not (keyword-identical? v :edamame.impl.parser/eof) v))
     (catch js/Error _)))
 
-(defn pretty [x]
-  (try (str/trim (with-out-str (fipp/pprint x))) (catch js/Error _ "")))
+(defn trimmed-str [x f]
+  (try (str/trim (with-out-str (f x))) (catch js/Error _ "")))
+
+(defn pretty [x] (trimmed-str x fipp/pprint))
 
 (defn inferred [value]
   (if (and value (not (str/blank? value)))
     (try (pretty (mp/provide [(read value)])) (catch js/Error _))
     ""))
-
-(defn query [k f]
-  (if-let [p (.getParameterValue (.parse Uri js/location) k)]
-    (if-not (str/blank? p)
-      (try
-        (pretty (f (read (str/trim p))))
-        (catch js/Error _ ""))
-      "")))
 
 (def models
   {:empty {}
@@ -129,8 +123,8 @@
                   '(fn [{:keys [x y]}] (> x y))]]
         :value {:x 1, :y 2}}})
 
-(defonce state* (r/atom {:schema (or (query "schema" m/form) "")
-                         :value (or (query "value" identity) "")}))
+(defonce state* (r/atom {:schema (.getParameterValue (.parse Uri js/location) "schema")
+                         :value (.getParameterValue (.parse Uri js/location) "value")}))
 (defonce delayed-state* (r/atom nil))
 (defonce mirrors* (r/atom {}))
 
