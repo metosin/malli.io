@@ -1,16 +1,17 @@
 {:deps {org.clojure/clojure {:mvn/version "1.10.1"}
         org.clojure/clojurescript {:mvn/version "1.10.773"}
         reagent {:mvn/version "0.10.0"}
+        borkdude/sci {:git/url "https://github.com/borkdude/sci.git"
+                      :sha "b310358cd41f761d7bbd50227a36d1160938ce71"}
         cljsjs/codemirror {:mvn/version "5.44.0-1"}
         cljsjs/parinfer-codemirror {:mvn/version "1.4.1-2"}
         fipp {:mvn/version "0.6.23"}
         metosin/malli {:git/url "https://github.com/metosin/malli"
-                       :sha "a3ee3cc9e63da9e508e23dd5acb51fb1b284982b"}
+                       :sha "85ce668b29102a395bb5ace0776ebad43343b66d"}
         appliedscience/js-interop {:mvn/version "0.2.5"}}
  :paths ["src" "resources"]
- :aliases {:fig {:extra-deps
-                 {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
-                  com.bhauman/figwheel-main {:mvn/version "0.2.9"}}
+ :aliases {:fig {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
+                              com.bhauman/figwheel-main {:mvn/version "0.2.9"}}
                  :extra-paths ["src" "target" "test"]}
            :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]}
            :outdated {:extra-deps {olical/depot {:mvn/version "RELEASE"}}

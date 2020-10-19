@@ -1,4 +1,5 @@
 ^{:watch-dirs ["src"]
   :css-dirs ["resources/public/css"]
   :auto-testing false}
-{:main malli.web}
+{:main malli.web
+ :closure-defines {malli.registry/type "custom"}}

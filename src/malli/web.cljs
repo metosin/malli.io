@@ -1,5 +1,6 @@
 (ns ^:figwheel-hooks malli.web
   (:require
+    [sci.core]
     [cljsjs.codemirror]
     [cljsjs.codemirror.addon.edit.matchbrackets]
     [cljsjs.codemirror.addon.lint.lint]
@@ -18,8 +19,13 @@
     [malli.provider :as mp]
     [malli.generator :as mg]
     [malli.json-schema :as mj]
-    [malli.swagger :as ms])
+    [malli.swagger :as ms]
+    [malli.util :as mu]
+    [malli.registry :as mr]
+    [malli.dot :as md])
   (:import [goog Uri]))
+
+(mr/set-default-registry! (merge (m/default-schemas) (mu/schemas)))
 
 (defn read [x]
   (try (e/parse-string x) (catch js/Error _)))
@@ -68,9 +74,8 @@
                      [:human [:map [:type [:= :human]] [:name string?] [:address [:map [:street string?]]]]]]]
            :value [{:type :sized, :size 10}
                    {:type :human, :name "tiina", :address {:street "kikka"}}]}
-   :cons {:schema [:schema {:title "ConsCell"
-                            :registry {:user/cons [:maybe [:tuple int? [:ref :user/cons]]]}}
-                   :user/cons]
+   :cons {:schema [:schema {:registry {"ConsCell" [:maybe [:tuple :int [:ref "ConsCell"]]]}}
+                   "ConsCell"]
           :value [1 [2 [3 [4 nil]]]]}
    :order {:schema [:schema
                     {:registry {"Country" [:map {:closed true}
@@ -132,14 +137,19 @@
                    (fn [state]
                      (let [schema (read-schema (:schema state))
                            value (read-value (:value state))
-                           inferred (try (mp/provide [value]) (catch js/Error _))]
+                           samples (try (mg/sample schema) (catch js/Error _))
+                           inferred (try (mp/provide [value]) (catch js/Error _))
+                           inferred-samples (try (mp/provide [samples]) (catch js/Error _))]
                        (.replaceState js/window.history nil "" (str (.setParameterValue (.parse Uri js/location) "value" (:value state))))
                        (.replaceState js/window.history nil "" (str (.setParameterValue (.parse Uri js/location) "schema" (:schema state))))
-                       (.setValue (@mirrors* "samples") (try (str/join "\n\n" (map pretty (mg/sample schema))) (catch js/Error _ "")))
+                       (.setValue (@mirrors* "samples") (try (str/join "\n\n" (map pretty samples)) (catch js/Error _ "")))
                        (.setValue (@mirrors* "json-schema") (try (pretty (mj/transform schema)) (catch js/Error _ "")))
                        (.setValue (@mirrors* "swagger-schema") (try (pretty (ms/transform schema)) (catch js/Error _ "")))
+                       (.setValue (@mirrors* "dot-schema") (try (trimmed-str (md/transform schema) println) (catch js/Error _ "")))
                        (.setValue (@mirrors* "inferred") (pretty inferred))
+                       (.setValue (@mirrors* "inferred-samples") (pretty inferred-samples))
                        (.setValue (@mirrors* "samples-inferred") (try (str/join "\n\n" (map pretty (mg/sample inferred))) (catch js/Error _ "")))
+                       (.setValue (@mirrors* "samples-inferred-samples") (try (str/join "\n\n" (map pretty (mg/sample inferred-samples))) (catch js/Error _ "")))
                        (reset! delayed-state* state))) 1000))
 
 (defn sync-delayed-state! []
@@ -156,7 +166,7 @@
   (swap! state* assoc :schema value)
   (.setValue (@mirrors* "schema") (or value "")))
 
-(defn editor [id state* {:keys [value on-change]}]
+(defn editor [id state* {:keys [value mode on-change]}]
   (r/create-class
     {:render (fn [] [:textarea
                      {:type "text"
@@ -165,16 +175,17 @@
                       :auto-complete "off"}])
      :component-did-mount (fn [this]
                             (let [opts (if value
-                                         #js {:mode "clojure"
+                                         #js {:mode (or mode "clojure")
                                               :matchBrackets true
                                               :readOnly true
                                               :lineNumbers true}
-                                         #js {:mode "clojure"
+                                         #js {:mode (or mode "clojure")
                                               :matchBrackets true
                                               :lineNumbers true})
                                   cm (.fromTextArea js/CodeMirror (rd/dom-node this) opts)]
-                              (js/parinferCodeMirror.init cm)
-                              (.removeKeyMap cm)
+                              (when-not mode
+                                (js/parinferCodeMirror.init cm)
+                                (.removeKeyMap cm))
                               (when-not value
                                 (.on cm "change" #(let [value (.getValue %)]
                                                     (reset! state* value)
@@ -215,6 +226,12 @@
      [:button.btn.btn-sm.btn-outline-primary
       {:on-click (reset! :order)}
       "Order"]
+     [:button.btn.btn-sm.btn-outline-primary
+      {:on-click (fn []
+                   (reset-schema! (js/decodeURIComponent "%5B%3Aschema%20%7B%3Aregistry%20%7B%22Pet%22%20%5B%3Amap%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5B%3Atype%20keyword%3F%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5B%3Aname%20string%3F%5D%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Cat%22%20%5B%3Amerge%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Pet%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5B%3Amap%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5B%3Atype%20%5B%3A%3D%20%22Cat%22%5D%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5B%3AhuntingSkill%20%5B%3Aenum%20%7B%3Adescription%20%22The%20measured%20skill%20for%20hunting%22%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Aclueless%2C%20%3Alazy%2C%20%3Aadventurous%2C%20%3Aaggressive%5D%5D%5D%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Dog%22%20%5B%3Amerge%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%22Pet%22%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5B%3Amap%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5B%3Atype%20%5B%3A%3D%20%22Dog%22%5D%5D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%5B%3ApackSize%20%5B%3Aint%20%7B%3Amin%200%2C%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Adefault%200%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Adescription%20%22the%20size%20of%20the%20pack%20the%20dog%20is%20from%22%7D%5D%5D%5D%5D%7D%7D%0A%20%5B%3Amulti%20%7B%3Adispatch%20%3Atype%7D%20%22Cat%22%20%22Dog%22%5D%5D"))
+                   (reset-value! (js/decodeURIComponent "%7B%3Atype%20%22Cat%22%2C%20%3Aname%20%22Viivi%22%2C%20%3AhuntingSkill%20%3Aadventurous%7D"))
+                   nil)}
+      "Pet"]
      (if (not= @state* @delayed-state*) [:span.text-muted.small " inferring schemas and generating values.."])]))
 
 (defn error [error]
@@ -250,8 +267,8 @@
     [:div.alert.alert-danger [:pre errors]]
     [:div.alert.alert-success "nil"]))
 
-(defn code [id]
-  (try [editor id nil {:value ""}]
+(defn code [id opts]
+  (try [editor id nil (merge opts {:value ""})]
        (catch js/Error _)))
 
 (defn swagger-schema [schema]
@@ -286,14 +303,26 @@
        {:class (if (not= @state* @delayed-state*) "overlay")}
        [:h3 "Sample values"]
        [code "samples"]
-       [:h3 "JSON Schema"]
-       [code "json-schema"]
-       [:h3 "Swagger Schema"]
-       [code "swagger-schema"]
+       [:h3 "Transformed Schema"]
+       [:div
+        [:h5 {:style {:color "grey"}} "JSON Schema"]
+        [code "json-schema"]
+        [:h5 {:style {:color "grey"}} "Swagger Schema"]
+        [code "swagger-schema"]
+        [:h5 {:style {:color "grey"}} "DOT"]
+        [code "dot-schema" {:mode "dot"}]]
        [:h3 "Inferred Schema"]
-       [code "inferred"]
+       [:div
+        [:h5 {:style {:color "grey"}} "from value"]
+        [code "inferred"]
+        [:h5 {:style {:color "grey"}} "from samples"]
+        [code "inferred-samples"]]
        [:h3 "Sample values from Inferred Schema"]
-       [code "samples-inferred"]]]]))
+       [:div
+        [:h5 {:style {:color "grey"}} "from value"]
+        [code "samples-inferred"]
+        [:h5 {:style {:color "grey"}} "from samples"]
+        [code "samples-inferred-samples"]]]]]))
 
 (defn mount-app-element []
   (when-let [el (js/document.getElementById "app")]
