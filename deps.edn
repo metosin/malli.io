@@ -1,13 +1,13 @@
-{:deps {org.clojure/clojure {:mvn/version "1.10.1"}
+{:deps {org.clojure/clojure {:mvn/version "1.10.3"}
         org.clojure/clojurescript {:mvn/version "1.10.773"}
-        reagent {:mvn/version "0.10.0"}
+        reagent/reagent {:mvn/version "1.0.0"}
         borkdude/sci {:git/url "https://github.com/borkdude/sci.git"
-                      :sha "b310358cd41f761d7bbd50227a36d1160938ce71"}
+                      :sha "c8e4c2f46c8dbf2b1b1b2b1fcdd406e884380450"}
         cljsjs/codemirror {:mvn/version "5.44.0-1"}
         cljsjs/parinfer-codemirror {:mvn/version "1.4.1-2"}
-        fipp {:mvn/version "0.6.23"}
+        fipp/fipp {:mvn/version "0.6.23"}
         metosin/malli {:git/url "https://github.com/metosin/malli"
-                       :sha "85ce668b29102a395bb5ace0776ebad43343b66d"}
+                       :sha "b8c4098b1b69effdb13a7d6354c8a15af87debd4"}
         appliedscience/js-interop {:mvn/version "0.2.5"}}
  :paths ["src" "resources"]
  :aliases {:fig {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}

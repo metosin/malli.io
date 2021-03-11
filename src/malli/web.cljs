@@ -120,6 +120,25 @@
           :value {:name "Tiina"
                   :age 81
                   :email "tiina@example.com"}}
+   :args {:schema [:* [:catn
+                       [:prop string?]
+                       [:val [:altn
+                              [:s string?]
+                              [:b boolean?]]]]]
+          :value ["-server" "foo" "-verbose" true "-user" "joe"]}
+   :hiccup {:schema [:schema {:registry {"hiccup" [:orn
+                                                   [:node [:catn
+                                                           [:name keyword?]
+                                                           [:props [:? [:map-of keyword? any?]]]
+                                                           [:children [:* [:schema [:ref "hiccup"]]]]]]
+                                                   [:primitive [:orn
+                                                                [:nil nil?]
+                                                                [:boolean boolean?]
+                                                                [:number number?]
+                                                                [:text string?]]]]}}
+                     "hiccup"]
+            :value [:div {:class [:foo :bar]}
+                    [:p "Hello, world of data"]]}
    :xy {:schema [:and
                  [:map
                   [:x int?]
@@ -232,6 +251,12 @@
                    (reset-value! (js/decodeURIComponent "%7B%3Atype%20%22Cat%22%2C%20%3Aname%20%22Viivi%22%2C%20%3AhuntingSkill%20%3Aadventurous%7D"))
                    nil)}
       "Pet"]
+     [:button.btn.btn-sm.btn-outline-primary
+      {:on-click (reset! :args)}
+      "args"]
+     [:button.btn.btn-sm.btn-outline-primary
+      {:on-click (reset! :hiccup)}
+      "hiccup"]
      (if (not= @state* @delayed-state*) [:span.text-muted.small " inferring schemas and generating values.."])]))
 
 (defn error [error]
