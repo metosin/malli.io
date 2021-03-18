@@ -7,7 +7,7 @@
         cljsjs/parinfer-codemirror {:mvn/version "1.4.1-2"}
         fipp/fipp {:mvn/version "0.6.23"}
         metosin/malli {:git/url "https://github.com/metosin/malli"
-                       :sha "b8c4098b1b69effdb13a7d6354c8a15af87debd4"}
+                       :sha "5193152e6722ee3f9116ae61fd468e1ca358c70f"}
         appliedscience/js-interop {:mvn/version "0.2.5"}}
  :paths ["src" "resources"]
  :aliases {:fig {:extra-deps {com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
